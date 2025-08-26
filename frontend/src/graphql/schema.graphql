@@ -1,0 +1,17 @@
+# src/graphql/schema.graphql
+scalar DateTime
+
+type Mutation {
+  login(username: String!, password: String!): AuthResponse!
+}
+
+type AuthResponse {
+  token: String!
+}
+
+type User {
+  id: ID!
+  display_name: String!
+  username: String!
+  role: String!
+}

@@ -1,0 +1,39 @@
+{
+    "appId": "com.yourcompany.yourapp",
+    "productName": "POS System",
+    "copyright": "Copyright © 2025 Your Company",
+    "directories": {
+        "output": "release",
+        "buildResources": "assets"
+    },
+    "files": [
+        "dist/**/*",
+        "main.cjs",
+        "preload.cjs",
+        "package.json"
+    ],
+    "extraMetadata": {
+        "main": "main.cjs"
+    },
+    "win": {
+        "target": "nsis",
+        "icon": "assets/icon.ico"
+    },
+    "nsis": {
+        "oneClick": false,
+        "perMachine": false,
+        "allowToChangeInstallationDirectory": true,
+        "createDesktopShortcut": true,
+        "createStartMenuShortcut": true,
+        "shortcutName": "POS System"
+    },
+    "extraResources": [
+        {
+            "from": ".",
+            "to": ".",
+            "filter": [
+                "**/*.env*"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,18 @@
+# src/graphql/mutations/categoryMutations.graphql
+
+# Create Product
+mutation CreateCategory($name: String!) {
+  createCategory(name: $name) {
+    name
+  }
+}
+
+mutation UpdateCategory($updateCategoryId: Int!, $name: String!) {
+  updateCategory(id: $updateCategoryId, name: $name) {
+    name
+  }
+}
+
+mutation DeleteCategory($id: Int!) {
+  deleteCategory(id: $id)
+}

@@ -1,0 +1,42 @@
+type Permission {
+  id: ID!
+  name: String!
+  description: String
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Role {
+  id: ID!
+  name: String!
+  description: String
+  permissions: [Permission!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type User {
+  id: ID!
+  phone: String!
+  password: String!
+  username: String
+  display_name: String
+  role: Role!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Query {
+  me: User
+  users: [User]
+}
+
+type Mutation {
+  login(phone: String, username: String, password: String!): AuthPayload!
+  refreshToken(refreshToken: String): AuthPayload!
+}
+
+type AuthPayload {
+  accessToken: String!
+  refreshToken: String
+}

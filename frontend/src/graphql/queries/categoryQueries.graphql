@@ -1,0 +1,7 @@
+#src/graphql/queries/categoryQueries.graphql
+query Categories {
+  categories {
+    name
+    id
+  }
+}

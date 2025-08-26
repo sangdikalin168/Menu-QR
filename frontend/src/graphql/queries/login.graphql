@@ -1,0 +1,7 @@
+# src/graphql/queries/login.graphql
+mutation Login($username: String, $phone: String, $password: String!) {
+  login(username: $username, phone: $phone, password: $password) {
+    accessToken
+    refreshToken
+  }
+}

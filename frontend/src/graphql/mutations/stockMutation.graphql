@@ -1,0 +1,9 @@
+mutation BulkAdjustStock($userId: Int, $items: [AdjustStockItemInput!]!) {
+  bulkAdjustStock(userId: $userId, items: $items) {
+    updated {
+      productId
+      quantity
+      updatedAt
+    }
+  }
+}

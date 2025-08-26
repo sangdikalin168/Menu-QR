@@ -1,0 +1,9 @@
+query Customers {
+  customers {
+    id
+    name
+    phone
+    createdAt
+    updatedAt
+  }
+}

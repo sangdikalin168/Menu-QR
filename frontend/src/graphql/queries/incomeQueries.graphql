@@ -1,0 +1,21 @@
+# query IncomeReport($startDate: DateTime, $endDate: DateTime) {
+#   incomeReport(startDate: $startDate, endDate: $endDate) {
+#     id
+#     amount
+#     paymentMethod
+#     paymentDate
+#     invoice {
+#       id
+#       invoiceNumber
+#       invoiceItem {
+#         id
+#         quantity
+#         unitPrice
+#         product {
+#           id
+#           name
+#         }
+#       }
+#     }
+#   }
+# }

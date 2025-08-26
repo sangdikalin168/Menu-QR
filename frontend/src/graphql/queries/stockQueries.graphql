@@ -1,0 +1,48 @@
+query LowStockProducts {
+  lowStockProducts {
+    name
+    stock {
+      quantity
+    }
+    category {
+      name
+    }
+    lowStockAlert
+  }
+}
+
+query StockMovementReport(
+  $startDate: DateTime
+  $endDate: DateTime
+  $categoryId: Int
+) {
+  stockMovementReport(
+    startDate: $startDate
+    endDate: $endDate
+    categoryId: $categoryId
+  ) {
+    id
+    productId
+    changeQuantity
+    reason
+    createdAt
+    logType
+    product {
+      name
+    }
+  }
+}
+
+query OutOfStockProducts($categoryId: Int) {
+  outOfStockProducts(categoryId: $categoryId) {
+    id
+    name
+    category {
+      id
+      name
+    }
+    stock {
+      quantity
+    }
+  }
+}

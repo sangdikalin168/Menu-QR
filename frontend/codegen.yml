@@ -1,0 +1,20 @@
+overwrite: true
+schema: "http://localhost:4000/graphql"
+documents: 
+  - "./src/graphql/queries/**/*.graphql"
+  - "./src/graphql/mutations/**/*.graphql"
+
+generates:
+  ./src/generated/graphql.tsx:
+    plugins:
+      - "typescript"
+      - "typescript-operations"
+      - "typescript-react-apollo"
+    config:
+      reactApolloVersion: 3
+      withHooks: true
+      withComponent: false
+      withHOC: false
+      scalars:
+        ID: number
+        DateTime: string
