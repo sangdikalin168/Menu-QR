@@ -54,7 +54,7 @@ async function startServer() {
   // Serve uploads folder as static files (use absolute path)
   const uploadsPath = join(__dirname, '..', '..', 'uploads');
   console.log(`Serving static files from: ${uploadsPath}`);
-  app.use('/uploads', express.static(uploadsPath));
+  app.use('/uploads', express.static(uploadsPath, { maxAge: '30d', etag: true }));
 
   // Enable file upload support for GraphQL
   app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));

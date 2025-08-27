@@ -84,15 +84,15 @@ const Dashboard: React.FC = () => {
                 </div>
             </div>
             {loading ? (
-                <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 gap-4 px-2">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 px-2">
                     {Array.from({ length: 9 }).map((_, i) => <SkeletonCard key={i} />)}
                 </div>
             ) : displayType === 'grid' ? (
                 /** Grid view **/
-                <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 gap-4 px-2">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 px-2">
                     {filteredProducts.map((product) => (
                         <div key={product.id} className="border rounded-lg flex flex-col items-center bg-white shadow">
-                            <img src={product.image ? `${API_URL}${product.image}` : ''} alt={product.name} className="w-32 h-32 object-cover mb-2 rounded" />
+                            <img src={product.image ? `${API_URL}${product.image}` : ''} alt={product.name} loading="lazy" className="w-32 h-32 object-cover mb-2 rounded" />
                             <div className="font-semibold">{product.name}</div>
                             <div className="text-gray-500">${product.price}</div>
                         </div>
@@ -100,7 +100,7 @@ const Dashboard: React.FC = () => {
                 </div>
             ) : (
                 /** Row view **/
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 px-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 px-2">
                     {filteredProducts.map((product) => (
                         <div key={product.id} className="border rounded-lg flex flex-row items-center bg-white shadow p-2">
                             <img src={product.image ? `${API_URL}${product.image}` : ''} alt={product.name} className="w-24 h-24 object-cover rounded mr-4" />
