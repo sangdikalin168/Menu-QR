@@ -17,7 +17,7 @@ scalar Upload
 
 type Mutation {
   createProduct(input: ProductInput!, file: Upload): Product!
-  updateProduct(id: ID!, input: ProductInput!): Product!
+  updateProduct(id: ID!, input: ProductInput!, file: Upload): Product!
   deleteProduct(id: ID!): Boolean!
   uploadProductImage(file: Upload!): String!
 }

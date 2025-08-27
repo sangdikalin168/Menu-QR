@@ -28,6 +28,7 @@ const Layout: React.FC = () => {
 
 
     const { user } = useAuthStore();
+    console.log('Layout user:', user);
     const role = user?.role.name || 'guest'; // Fallback to 'guest' if no role
 
 
@@ -38,46 +39,57 @@ const Layout: React.FC = () => {
 
     return (
         <div className="flex h-screen overflow-hidden">
-            {/* Sidebar Overlay for Mobile View (only visible on mobile when sidebar is open) */}
-            <div
-                className={`fixed inset-0 z-20 bg-black/30 transition-opacity duration-300 lg:hidden ${isSidebarOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
-                    }`}
-                onClick={handleDrawerToggle} // Click overlay to close sidebar
-            />
+            {/* Show menu bar only if user is logged in */}
+            {user ? (
+                <>
+                    {/* Sidebar Overlay for Mobile View (only visible on mobile when sidebar is open) */}
+                    <div
+                        className={`fixed inset-0 z-20 bg-black/30 transition-opacity duration-300 lg:hidden ${isSidebarOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+                            }`}
+                        onClick={handleDrawerToggle} // Click overlay to close sidebar
+                    />
 
-            {/* Sidebar */}
-            {/* The key changes are in these Tailwind classes:
-                - Mobile: It remains 'fixed' and slides in/out using 'translate-x'.
-                - Desktop: It becomes 'relative' (takes up space), and its width changes
-                  between 200px (open) and 0px (closed), hiding overflow.
-            */}
-            <aside
-                className={`fixed inset-y-0 left-0 z-30 min-w-[300px] bg-white border-r shadow-md transition-all duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${isSidebarOpen ? 'lg:w-[300px]' : 'lg:w-0 lg:overflow-hidden'} lg:flex-shrink-0`}
-            >
-                {/* Pass handleDrawerToggle to Sidebar so clicking links can close it on mobile */}
-                <Sidebar role={role} toggle={handleDrawerToggle} />
-            </aside>
-
-            {/* Main Content Area */}
-            <div
-                className={`flex-1 flex flex-col w-full transition-all duration-300 ease-in-out ${isSidebarOpen ? 'lg:ml-[300px]' : 'lg:ml-0'}`}
-            >
-                <header className="fixed top-0 z-20 flex h-[50px] w-full items-center justify-between bg-blue-600 px-2 text-white shadow">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="inline-flex" // The toggle button is now always visible
-                        onClick={handleDrawerToggle}
+                    {/* Sidebar */}
+                    {/* The key changes are in these Tailwind classes:
+                        - Mobile: It remains 'fixed' and slides in/out using 'translate-x'.
+                        - Desktop: It becomes 'relative' (takes up space), and its width changes
+                          between 200px (open) and 0px (closed), hiding overflow.
+                    */}
+                    <aside
+                        className={`fixed inset-y-0 left-0 z-30 min-w-[300px] bg-white border-r shadow-md transition-all duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${isSidebarOpen ? 'lg:w-[300px]' : 'lg:w-0 lg:overflow-hidden'} lg:flex-shrink-0`}
                     >
-                        <Menu className="h-5 w-5" />
-                    </Button>
-                    <Header />
-                </header>
+                        {/* Pass handleDrawerToggle to Sidebar so clicking links can close it on mobile */}
+                        <Sidebar role={role} toggle={handleDrawerToggle} />
+                    </aside>
 
-                <main className="flex-1 overflow-y-auto pt-[50px]">
-                    <Outlet />
-                </main>
-            </div>
+                    {/* Main Content Area */}
+                    <div
+                        className={`flex-1 flex flex-col w-full transition-all duration-300 ease-in-out ${isSidebarOpen ? 'lg:ml-[300px]' : 'lg:ml-0'}`}
+                    >
+                        <header className="fixed top-0 z-20 flex h-[50px] w-full items-center justify-between bg-blue-600 px-2 text-white shadow">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="inline-flex" // The toggle button is now always visible
+                                onClick={handleDrawerToggle}
+                            >
+                                <Menu className="h-5 w-5" />
+                            </Button>
+                            <Header />
+                        </header>
+
+                        <main className="flex-1 overflow-y-auto pt-[50px]">
+                            <Outlet />
+                        </main>
+                    </div>
+                </>
+            ) : (
+                <div className="flex-1 flex flex-col w-full">
+                    <main className="flex-1 overflow-y-auto">
+                        <Outlet />
+                    </main>
+                </div>
+            )}
         </div>
     );
 };

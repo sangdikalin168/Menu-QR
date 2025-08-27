@@ -113,21 +113,23 @@ export const useAuth = (): AuthState => {
 
     const logoutHandler = async () => {
         console.log('Logging out...');
-
         try {
-            const result = await client.mutate({
+            await client.mutate({
                 mutation: gql`
                     mutation {
                         logout
                     }
                 `,
             });
-            console.log('Logout result:', result);
             logout();
+            setUser(null);
+            setAccessToken('');
             navigate('/login');
         } catch (error) {
             console.error('Logout error:', error);
             logout();
+            setUser(null);
+            setAccessToken('');
             navigate('/login');
         }
     };

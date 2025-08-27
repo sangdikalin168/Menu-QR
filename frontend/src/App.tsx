@@ -19,15 +19,12 @@ function App() {
       <BrowserRouter>
         <AuthInitializer />
         <Routes>
-          <Route path="/" element={<Dashboard />} />
           <Route path="/login" element={<Login />} />
-          <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/product" element={<ProductPage />} />
-              <Route path="/category" element={<CategoryPage />} />
-            </Route>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/product" element={<ProductPage />} />
+            <Route path="/category" element={<CategoryPage />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

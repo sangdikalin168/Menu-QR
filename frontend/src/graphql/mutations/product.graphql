@@ -11,16 +11,18 @@ mutation CreateProduct($input: ProductInput!, $file: Upload) {
   }
 }
 
-mutation UpdateProduct($id: ID!, $input: ProductInput!) {
-  updateProduct(id: $id, input: $input) {
+mutation UpdateProduct($id: ID!, $input: ProductInput!, $file: Upload) {
+  updateProduct(id: $id, input: $input, file: $file) {
     id
     name
     price
     categories {
       id
       name
+      __typename
     }
     image
+    __typename
   }
 }
 

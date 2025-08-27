@@ -53,8 +53,42 @@ export const resolvers = {
       });
       return product;
     },
-    updateProduct: async (_: any, { id, input }: any, { prisma }: any) => {
-      const { name, price, description, categories, image } = input;
+    updateProduct: async (_: any, { id, input, file }: any, { prisma }: any) => {
+      let imageUrl = input.image;
+      if (file) {
+        // Get old image path from DB
+        const oldProduct = await prisma.product.findUnique({ where: { id } });
+        const oldImagePath = oldProduct?.image;
+        // Upload new image
+        const { createReadStream, filename } = await file;
+        const ext = path.extname(filename);
+        const newFilename = `${Date.now()}${ext}`;
+        const uploadsDir = path.join(__dirname, '../../../uploads');
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        const uploadPath = path.join(uploadsDir, newFilename);
+        await new Promise((resolve, reject) => {
+          const stream = createReadStream();
+          const out = fs.createWriteStream(uploadPath);
+          stream.pipe(out);
+          out.on('finish', () => resolve(undefined));
+          out.on('error', reject);
+        });
+        imageUrl = `/uploads/${newFilename}`;
+        // Delete old image file if exists and is in uploads folder
+        if (oldImagePath && oldImagePath.startsWith('/uploads/')) {
+          const oldImageFullPath = path.join(uploadsDir, path.basename(oldImagePath));
+          if (fs.existsSync(oldImageFullPath)) {
+            try {
+              fs.unlinkSync(oldImageFullPath);
+            } catch (err) {
+              console.warn('Failed to delete old image:', err);
+            }
+          }
+        }
+      }
+      const { name, price, description, categories } = input;
       // Check if all categories exist
       if (categories && categories.length > 0) {
         const foundCategories = await prisma.category.findMany({ where: { id: { in: categories } } });
@@ -68,7 +102,7 @@ export const resolvers = {
           name,
           price,
           description,
-          image,
+          image: imageUrl,
           categories: categories && categories.length > 0 ? { set: categories.map((id: string) => ({ id })) } : undefined,
         },
       });

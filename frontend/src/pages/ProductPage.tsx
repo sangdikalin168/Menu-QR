@@ -14,6 +14,8 @@ import {
 import { useCreateProductMutation, useProductsQuery, useUpdateProductMutation } from "../generated/graphql";
 import { useCategoryOptions } from "../hooks/useCategoryOptions";
 
+const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
+
 // Product type
 type Product = {
     id: number;
@@ -51,17 +53,32 @@ export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; s
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (editProduct) {
-            await updateProduct({
-                variables: {
-                    id: editProduct.id,
-                    input: {
-                        name,
-                        price: price,
-                        categories: [category],
-                        image: imagePreview ?? editProduct.image,
+            if (imageFile) {
+                await updateProduct({
+                    variables: {
+                        id: editProduct.id,
+                        input: {
+                            name,
+                            price: price,
+                            categories: [category],
+                            // Do not send image, let backend handle file upload
+                        },
+                        file: imageFile,
                     },
-                },
-            });
+                });
+            } else {
+                await updateProduct({
+                    variables: {
+                        id: editProduct.id,
+                        input: {
+                            name,
+                            price: price,
+                            categories: [category],
+                            image: editProduct.image,
+                        },
+                    },
+                });
+            }
         } else {
             await createProduct({
                 variables: {
@@ -69,7 +86,7 @@ export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; s
                         name,
                         price: price,
                         categories: [category],
-                        image: imagePreview,
+                        // Do not send image, let backend handle file upload
                     },
                     file: imageFile,
                 },
@@ -86,10 +103,13 @@ export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; s
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogContent>
+            <DialogContent aria-describedby="product-dialog-desc">
                 <DialogHeader>
                     <DialogTitle>{editProduct ? "Edit Product" : "Add Product"}</DialogTitle>
                 </DialogHeader>
+                <p id="product-dialog-desc" className="sr-only">
+                    Fill out the product details and upload an image.
+                </p>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <Input
                         type="text"
@@ -123,7 +143,7 @@ export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; s
                     />
                     {imagePreview && (
                         <div className="flex justify-center">
-                            <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded border" />
+                            <img src={imagePreview.startsWith('/uploads/') ? `${API_URL}${imagePreview}` : imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded border" />
                         </div>
                     )}
                     <DialogFooter>
@@ -159,7 +179,7 @@ export default function ProductPage() {
         { accessorKey: "price", header: "Price" },
         { accessorKey: "categories", header: "Category", cell: ({ row }) => row.original.categories?.[0]?.name ?? "" },
         { accessorKey: "image", header: "Image", cell: ({ row }) => (
-            <img src={row.original.image} alt={row.original.name} className="w-12 h-12 object-cover rounded" />
+            <img src={row.original.image.startsWith('/uploads/') ? `${API_URL}${row.original.image}` : row.original.image} alt={row.original.name} className="w-12 h-12 object-cover rounded" />
         ) },
         {
             id: "actions",

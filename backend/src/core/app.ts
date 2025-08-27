@@ -22,7 +22,12 @@ async function startServer() {
   app.use(morgan('dev'));
 
   // CORS middleware
-  const allowedOrigins = ['http://localhost:5173', 'http://localhost:3000', 'https://studio.apollographql.com']; // Add more as needed
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://studio.apollographql.com',
+    ...process.env.ALLOWED_ORIGINS?.split(',').map(origin => origin.trim()) || []
+  ];
   app.use(cors({
     origin: function (origin, callback) {
       if (!origin) return callback(null, true);
@@ -39,14 +44,17 @@ async function startServer() {
     helmet({
       contentSecurityPolicy: false, // Disable CSP for Playground assets
       crossOriginEmbedderPolicy: false, // Allow cross-origin for Playground
+      crossOriginResourcePolicy: { policy: "cross-origin" },
     })
   );
 
   // Rate limiting middleware
   app.use(apiLimiter);
 
-  // Serve uploads folder as static files
-  app.use('/uploads', express.static(join(__dirname, '../../../uploads')));
+  // Serve uploads folder as static files (use absolute path)
+  const uploadsPath = join(__dirname, '..', '..', 'uploads');
+  console.log(`Serving static files from: ${uploadsPath}`);
+  app.use('/uploads', express.static(uploadsPath));
 
   // Enable file upload support for GraphQL
   app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));

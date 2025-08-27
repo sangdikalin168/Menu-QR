@@ -169,5 +169,18 @@ export const resolvers = {
       });
       return { accessToken };
     },
+    logout: async (_: any, __: any, context: any) => {
+      const { res, req, prisma, user } = context;
+      // Remove refresh token from DB
+      if (user) {
+        await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
+      }
+      // Clear cookies
+      if (res) {
+        res.clearCookie('accessToken', { path: '/' });
+        res.clearCookie('jwt', { path: '/' });
+      }
+      return true;
+    },
   },
 };

@@ -88,6 +88,7 @@ export type MutationUpdateCategoryArgs = {
 
 
 export type MutationUpdateProductArgs = {
+  file?: InputMaybe<Scalars['Upload']['input']>;
   id: Scalars['ID']['input'];
   input: ProductInput;
 };
@@ -176,10 +177,11 @@ export type CreateProductMutation = { __typename?: 'Mutation', createProduct: { 
 export type UpdateProductMutationVariables = Exact<{
   id: Scalars['ID']['input'];
   input: ProductInput;
+  file?: InputMaybe<Scalars['Upload']['input']>;
 }>;
 
 
-export type UpdateProductMutation = { __typename?: 'Mutation', updateProduct: { __typename?: 'Product', id: number, name: string, price: number, image?: string | null, categories: Array<{ __typename?: 'Category', id: number, name: string }> } };
+export type UpdateProductMutation = { __typename?: 'Mutation', updateProduct: { __typename: 'Product', id: number, name: string, price: number, image?: string | null, categories: Array<{ __typename: 'Category', id: number, name: string }> } };
 
 export type DeleteProductMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -289,16 +291,18 @@ export type CreateProductMutationHookResult = ReturnType<typeof useCreateProduct
 export type CreateProductMutationResult = Apollo.MutationResult<CreateProductMutation>;
 export type CreateProductMutationOptions = Apollo.BaseMutationOptions<CreateProductMutation, CreateProductMutationVariables>;
 export const UpdateProductDocument = gql`
-    mutation UpdateProduct($id: ID!, $input: ProductInput!) {
-  updateProduct(id: $id, input: $input) {
+    mutation UpdateProduct($id: ID!, $input: ProductInput!, $file: Upload) {
+  updateProduct(id: $id, input: $input, file: $file) {
     id
     name
     price
     categories {
       id
       name
+      __typename
     }
     image
+    __typename
   }
 }
     `;
@@ -319,6 +323,7 @@ export type UpdateProductMutationFn = Apollo.MutationFunction<UpdateProductMutat
  *   variables: {
  *      id: // value for 'id'
  *      input: // value for 'input'
+ *      file: // value for 'file'
  *   },
  * });
  */
