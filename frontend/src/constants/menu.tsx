@@ -19,6 +19,18 @@ export const menuItems = [
         roles: ['ADMIN', 'HR', 'employee'],
     },
     {
+        label: 'Product Management',
+        icon: <BarChart3 className="h-5 w-5" />,
+        path: '/product',
+        roles: ['ADMIN', 'HR', 'employee'],
+    },
+    {
+        label: 'Category Management',
+        icon: <BarChart3 className="h-5 w-5" />,
+        path: '/category',
+        roles: ['ADMIN', 'HR', 'employee'],
+    },
+    {
         label: 'Logout',
         icon: <LogOut className="h-5 w-5" />,
         path: '/logout',

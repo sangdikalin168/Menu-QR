@@ -1,0 +1,25 @@
+query Products {
+  products {
+    id
+    name
+    price
+    categories {
+      id
+      name
+    }
+    image
+  }
+}
+
+query Product($id: ID!) {
+  product(id: $id) {
+    id
+    name
+    price
+    categories {
+      id
+      name
+    }
+    image
+  }
+}

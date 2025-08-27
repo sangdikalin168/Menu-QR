@@ -1,0 +1,33 @@
+mutation CreateProduct($input: ProductInput!, $file: Upload) {
+  createProduct(input: $input, file: $file) {
+    id
+    name
+    price
+    categories {
+      id
+      name
+    }
+    image
+  }
+}
+
+mutation UpdateProduct($id: ID!, $input: ProductInput!) {
+  updateProduct(id: $id, input: $input) {
+    id
+    name
+    price
+    categories {
+      id
+      name
+    }
+    image
+  }
+}
+
+mutation DeleteProduct($id: ID!) {
+  deleteProduct(id: $id)
+}
+
+mutation UploadProductImage($file: Upload!) {
+  uploadProductImage(file: $file)
+}

@@ -46,3 +46,4 @@ console.log('DEBUG Query keys:', Object.keys(combinedResolvers.Query || {}));
 console.log('DEBUG Mutation keys:', Object.keys(combinedResolvers.Mutation || {}));
 console.log('DEBUG combinedTypeDefs count:', combinedTypeDefs.length);
 export { combinedResolvers, combinedTypeDefs };
+

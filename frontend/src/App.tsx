@@ -7,6 +7,8 @@ import { ProtectedRoute } from './router/ProtectedRoute';
 import { NotFoundPage } from './pages/NotFoundPage';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
+import ProductPage from './pages/ProductPage';
+import CategoryPage from './pages/CategoryPage';
 import Login from './pages/auth/Login';
 import { AuthInitializer } from './components/AuthInitializer';
 
@@ -17,11 +19,14 @@ function App() {
       <BrowserRouter>
         <AuthInitializer />
         <Routes>
+          <Route path="/" element={<Dashboard />} />
           <Route path="/login" element={<Login />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Layout />}>
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/product" element={<ProductPage />} />
+              <Route path="/category" element={<CategoryPage />} />
             </Route>
           </Route>
           <Route path="*" element={<NotFoundPage />} />

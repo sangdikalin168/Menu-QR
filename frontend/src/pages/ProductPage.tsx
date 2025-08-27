@@ -1,115 +1,197 @@
-//src/pages/ProductPage.tsx
-import { CrudTable } from '../components/shared/CrudTable';
-import { useProduct } from '../hooks/useProduct';
-import { useCategoriesQuery } from '../hooks/useCategories';
-import { ProductForm } from '../components/product/ProductForm';
-import type { Product } from '../generated/graphql';
-import LoadingPage from '../components/ui/LoadingPage';
+import React, { useState } from "react";
+import DataTable from "../components/common/DataTable";
+import { type ColumnDef } from "@tanstack/react-table";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+    DialogClose,
+} from "../components/ui/dialog";
+import { useCreateProductMutation, useProductsQuery, useUpdateProductMutation } from "../generated/graphql";
+import { useCategoryOptions } from "../hooks/useCategoryOptions";
 
+// Product type
+type Product = {
+    id: number;
+    name: string;
+    price: number;
+    categories: { id: number; name: string }[];
+    image: string;
+};
 
-const ProductPage = () => {
-    const columns = [
-        { key: 'name', label: 'ឈ្មោះ' },
-        {
-            key: 'retailPrice',
-            label: 'តម្លៃរាយ(Pcs)',
-            render: (item: Product) => {
-                return (
-                    <>
-                        {item.retailPrice ? item.retailPrice.toLocaleString() : <span className="text-gray-400">0</span>}៛
-                    </>
-                )
-            }
-        },
-        {
-            key: 'wholesalePrice', label: 'តម្លៃបោះដុំ(Pcs)',
-            render: (item: Product) => {
-                return (
-                    <>
-                        {item.wholesalePrice ? item.wholesalePrice.toLocaleString() : <span className="text-gray-400">0</span>}៛
-                    </>
-                )
-            }
-        },
-        {
-            key: 'unitName',
-            label: 'ឯកតា',
-            render: (item: Product) => item.unitName || '-',
-        },
-        {
-            key: 'boxRetailPrice', label: 'តម្លៃរាយ(កេះ)',
-            render: (item: Product) => {
-                return (
-                    <>
-                        {item.boxRetailPrice ? item.boxRetailPrice.toLocaleString() : <span className="text-gray-400">0</span>}៛
-                    </>
-                )
-            }
-        },
-        {
-            key: 'boxWholesalePrice', label: 'តម្លៃបោះដុំ(កេះ)',
-            render: (item: Product) => {
-                return (
-                    <>
-                        {item.boxWholesalePrice ? item.boxWholesalePrice.toLocaleString() : <span className="text-gray-400">0</span>}៛
-                    </>
-                )
-            }
-        },
-        { key: 'boxUnitName', label: 'ឯកតាជាកេះ' },
-        {
-            key: 'stock',
-            label: 'ក្នុង-ស្តុក',
-            render: (item: Product) => {
-                const quantity = item.stock?.quantity ?? 0;
-                return (
-                    <>
-                        {item.pcsPerBox && quantity >= item.pcsPerBox
-                            ? `${Math.floor(quantity / item.pcsPerBox)} ${item.boxUnitName}`
-                            : `${quantity} ${item.unitName}`}
-                    </>
-                );
-            },
-        },
-        {
-            key: 'category',
-            label: 'ប្រភេទ',
-            render: (item: Product) => item.category?.name || '-',
-        },
-    ];
+export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; setOpen: (v: boolean) => void; editProduct?: Product | null }> = ({ refetch, open, setOpen, editProduct }) => {
+    const [name, setName] = useState(editProduct?.name || "");
+    const [price, setPrice] = useState<number>(editProduct ? editProduct.price : 0);
+    const [category, setCategory] = useState<string>(editProduct?.categories?.[0]?.id.toString() || "");
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [createProduct, { loading: creating }] = useCreateProductMutation();
+    const [updateProduct, { loading: updating }] = useUpdateProductMutation();
+    const categoryOptions = useCategoryOptions();
 
-    const crudProps = useProduct();
-    const { loading, loadingCreate, loadingUpdate, loadingDelete } = crudProps;
-    const categories = useCategoriesQuery();
+    React.useEffect(() => {
+        setName(editProduct?.name || "");
+        setPrice(editProduct ? editProduct.price : 0);
+        setCategory(editProduct?.categories?.[0]?.id.toString() || "");
+        setImageFile(null);
+        setImagePreview(editProduct?.image || null);
+    }, [editProduct, open]);
 
-    if (loading || categories.loading || loadingCreate || loadingUpdate || loadingDelete) {
-        return <LoadingPage />;
-    }
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setImageFile(e.target.files[0]);
+            setImagePreview(URL.createObjectURL(e.target.files[0]));
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (editProduct) {
+            await updateProduct({
+                variables: {
+                    id: editProduct.id,
+                    input: {
+                        name,
+                        price: price,
+                        categories: [category],
+                        image: imagePreview ?? editProduct.image,
+                    },
+                },
+            });
+        } else {
+            await createProduct({
+                variables: {
+                    input: {
+                        name,
+                        price: price,
+                        categories: [category],
+                        image: imagePreview,
+                    },
+                    file: imageFile,
+                },
+            });
+        }
+        setName("");
+        setPrice(0);
+        setCategory("");
+        setImageFile(null);
+        setImagePreview(null);
+        setOpen(false);
+        refetch();
+    };
 
     return (
-        <div className="w-full">
-            <CrudTable
-                {...crudProps}
-                columns={columns}
-                renderForm={(props) => (
-                    <ProductForm
-                        item={props.item}
-                        onSubmit={async (values) => {
-                            try {
-                                props.onSubmit(values);
-                                return { success: true };
-                            } catch {
-                                return { success: false };
-                            }
-                        }}
-                        onClose={props.onClose}
-                        categories={categories.data?.items || []}
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{editProduct ? "Edit Product" : "Add Product"}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <Input
+                        type="text"
+                        placeholder="Product Name"
+                        value={name}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+                        required
                     />
-                )}
-                title="Products"
-            />
-        </div>
+                    <Input
+                        type="number"
+                        placeholder="Price"
+                        value={price}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrice(parseFloat(e.target.value) || 0)}
+                        required
+                    />
+                    <select
+                        className="border rounded px-2 py-1 w-full"
+                        value={category}
+                        onChange={e => setCategory(e.target.value)}
+                        required
+                    >
+                        <option value="" disabled>Select Category</option>
+                        {categoryOptions.map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                    </select>
+                    <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                    />
+                    {imagePreview && (
+                        <div className="flex justify-center">
+                            <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded border" />
+                        </div>
+                    )}
+                    <DialogFooter>
+                        <Button type="submit" disabled={creating || updating}>
+                            {creating || updating
+                                ? (editProduct ? "Save" : "Create Product")
+                                : (editProduct ? "Save" : "Create Product")}
+                        </Button>
+                        <DialogClose asChild>
+                            <Button variant="ghost" type="button">Cancel</Button>
+                        </DialogClose>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     );
 };
 
-export default ProductPage;
+// Example usage in your ProductPage component:
+// <ProductCreateForm />
+
+// Mock product data
+
+export default function ProductPage() {
+    const { data, loading, error, refetch } = useProductsQuery();
+    const products = data?.products ?? [];
+    const [openDialog, setOpenDialog] = useState(false);
+    const [editProduct, setEditProduct] = useState<Product | null>(null);
+
+    const columns: ColumnDef<Product>[] = [
+        { accessorKey: "id", header: "ID" },
+        { accessorKey: "name", header: "Name" },
+        { accessorKey: "price", header: "Price" },
+        { accessorKey: "categories", header: "Category", cell: ({ row }) => row.original.categories?.[0]?.name ?? "" },
+        { accessorKey: "image", header: "Image", cell: ({ row }) => (
+            <img src={row.original.image} alt={row.original.name} className="w-12 h-12 object-cover rounded" />
+        ) },
+        {
+            id: "actions",
+            header: "Actions",
+            cell: ({ row }) => (
+                <Button variant="ghost" size="icon" onClick={() => {
+                    setEditProduct(row.original);
+                    setOpenDialog(true);
+                }} title="Edit">
+                    ✏️
+                </Button>
+            ),
+        },
+    ];
+
+    const handleAdd = () => {
+        setEditProduct(null);
+        setOpenDialog(true);
+    };
+
+    return (
+        <div className="p-4">
+            <h1 className="text-2xl font-bold mb-4">Product Management</h1>
+            <Button className="mb-4" onClick={handleAdd}>Add Product</Button>
+            <ProductDialogForm refetch={refetch} open={openDialog} setOpen={setOpenDialog} editProduct={editProduct} />
+            <DataTable
+                columns={columns}
+                data={products.map(p => ({ ...p, image: p.image ?? "" }))}
+                loading={loading}
+                error={error?.message}
+                tableId="product-table"
+            />
+        </div>
+    );
+}

@@ -1,0 +1,28 @@
+type Product {
+  id: ID!
+  name: String!
+  price: Float!
+  categories: [Category!]!
+  image: String
+}
+
+input ProductInput {
+  name: String!
+  price: Float!
+  categories: [String!]!
+  image: String
+}
+
+scalar Upload
+
+type Mutation {
+  createProduct(input: ProductInput!, file: Upload): Product!
+  updateProduct(id: ID!, input: ProductInput!): Product!
+  deleteProduct(id: ID!): Boolean!
+  uploadProductImage(file: Upload!): String!
+}
+
+type Query {
+  products: [Product!]!
+  product(id: ID!): Product
+}

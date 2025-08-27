@@ -3,6 +3,7 @@ import cors from 'cors';
 import { apiLimiter } from '../middleware/rateLimit';
 import helmet from 'helmet';
 import { ApolloServer } from 'apollo-server-express';
+import { graphqlUploadExpress } from 'graphql-upload-minimal';
 import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 import morgan from 'morgan';
 import { readFileSync } from 'fs';
@@ -43,6 +44,12 @@ async function startServer() {
 
   // Rate limiting middleware
   app.use(apiLimiter);
+
+  // Serve uploads folder as static files
+  app.use('/uploads', express.static(join(__dirname, '../../../uploads')));
+
+  // Enable file upload support for GraphQL
+  app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
 
   const server = new ApolloServer({
     typeDefs,
