@@ -10,6 +10,60 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// 1. Permissions Table
+// This lists all the specific actions a user can perform.
+model Permission {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique // e.g., "product:create", "order:refund", "report:view:sales"
+  description String? // A human-readable description of the permission
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  roles Role[] @relation("RolePermissions") // Many-to-many relationship with Role
+}
+
+// 2. Role Table (replaces the UserRole enum for User directly)
+// Defines the roles and their associated permissions.
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique // e.g., "ADMIN", "MANAGER", "CASHIER" - maps to your UserRole enum names
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[] // One-to-many: a role can have many users
+  permissions Permission[] @relation("RolePermissions")
+}
+
+// RefreshToken model for storing user refresh tokens
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// User model for authentication
+model User {
+  id            Int            @id @default(autoincrement())
+  phone         String         @unique
+  password      String
+  username      String?        @unique
+  display_name  String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  roleId        Int            @default(1) // Foreign key to Role model
+  role          Role           @relation(fields: [roleId], references: [id]) // Relation to the Role 
+  refreshTokens RefreshToken[]
+
+  @@index([roleId])
+}
 
 
 model Product {
