@@ -3,10 +3,9 @@ import DataTable from "../components/common/DataTable";
 import { type ColumnDef } from "@tanstack/react-table";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { useCategoriesQuery, useCreateCategoryMutation } from "../generated/graphql";
+import { useCategoriesQuery, useCreateCategoryMutation, useUpdateCategoryMutation } from "../generated/graphql";
 import {
     Dialog,
-    DialogTrigger,
     DialogContent,
     DialogHeader,
     DialogTitle,
@@ -14,24 +13,31 @@ import {
     DialogClose,
 } from "../components/ui/dialog";
 
-// Category type
-interface Category {
-    id: number;
-    name: string;
-}
+import type { Category } from "../generated/graphql";
 
 export const CategoryDialogForm: React.FC<{ refetch: () => void; open: boolean; setOpen: (v: boolean) => void; editCategory?: Category | null }> = ({ refetch, open, setOpen, editCategory }) => {
     const [name, setName] = useState(editCategory?.name || "");
-    const [createCategory, { loading }] = useCreateCategoryMutation();
+    const [parentId, setParentId] = useState(editCategory?.parentId ? String(editCategory.parentId) : "");
+    const [createCategory, { loading: creating }] = useCreateCategoryMutation();
+    const [updateCategory, { loading: updating }] = useUpdateCategoryMutation();
+    const { data } = useCategoriesQuery();
+    const categoryOptions = (data?.categories ?? []).filter(cat => !editCategory || cat.id !== editCategory.id);
 
     React.useEffect(() => {
         setName(editCategory?.name || "");
+        setParentId(editCategory?.parentId ? String(editCategory.parentId) : "");
     }, [editCategory, open]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        await createCategory({ variables: { input: { name } } });
+        const parentIdValue = parentId ? Number(parentId) : undefined;
+        if (editCategory) {
+            await updateCategory({ variables: { id: editCategory.id, input: { name, parentId: parentIdValue } } });
+        } else {
+            await createCategory({ variables: { input: { name, parentId: parentIdValue } } });
+        }
         setName("");
+        setParentId("");
         setOpen(false);
         refetch();
     };
@@ -50,9 +56,19 @@ export const CategoryDialogForm: React.FC<{ refetch: () => void; open: boolean; 
                         onChange={e => setName(e.target.value)}
                         required
                     />
+                    <select
+                        className="border rounded px-2 py-1 w-full"
+                        value={parentId}
+                        onChange={e => setParentId(e.target.value)}
+                    >
+                        <option value="">No Parent (Top Level)</option>
+                        {categoryOptions.map(opt => (
+                            <option key={opt.id} value={opt.id}>{opt.name}</option>
+                        ))}
+                    </select>
                     <DialogFooter>
-                        <Button type="submit" disabled={loading}>
-                            {loading ? (editCategory ? "Saving..." : "Creating...") : (editCategory ? "Save" : "Create Category")}
+                        <Button type="submit" disabled={creating || updating}>
+                            {(creating || updating) ? (editCategory ? "Saving..." : "Creating...") : (editCategory ? "Save" : "Create Category")}
                         </Button>
                         <DialogClose asChild>
                             <Button variant="ghost" type="button">Cancel</Button>
@@ -63,11 +79,6 @@ export const CategoryDialogForm: React.FC<{ refetch: () => void; open: boolean; 
         </Dialog>
     );
 };
-
-const columns: ColumnDef<Category>[] = [
-    { accessorKey: "id", header: "ID" },
-    { accessorKey: "name", header: "Name" },
-];
 
 const CategoryPage: React.FC = () => {
     const { data, loading, error, refetch } = useCategoriesQuery();
@@ -80,7 +91,25 @@ const CategoryPage: React.FC = () => {
         setOpenDialog(true);
     };
 
-    // For edit, you would setEditCategory(category) and setOpenDialog(true)
+    const handleEdit = (category: Category) => {
+        setEditCategory(category);
+        setOpenDialog(true);
+    };
+
+    const columns: ColumnDef<Category>[] = [
+        { accessorKey: "id", header: "ID" },
+        { accessorKey: "name", header: "Name" },
+        { accessorKey: "parent", header: "Parent Category", cell: ({ row }) => row.original.parent?.name ?? "" },
+        {
+            id: "actions",
+            header: "Actions",
+            cell: ({ row }) => (
+                <Button size="sm" variant="outline" onClick={() => handleEdit(row.original)}>
+                    Edit
+                </Button>
+            ),
+        },
+    ];
 
     return (
         <div className="p-4">

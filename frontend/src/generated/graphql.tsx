@@ -26,12 +26,21 @@ export type AuthPayload = {
 
 export type Category = {
   __typename?: 'Category';
+  children?: Maybe<Array<Category>>;
+  description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  image?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
+  parent?: Maybe<Category>;
+  parentId?: Maybe<Scalars['ID']['output']>;
+  products?: Maybe<Array<Product>>;
 };
 
 export type CategoryInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  image?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
+  parentId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type Mutation = {
@@ -41,6 +50,7 @@ export type Mutation = {
   deleteCategory: Scalars['Boolean']['output'];
   deleteProduct: Scalars['Boolean']['output'];
   login: AuthPayload;
+  logout: Scalars['Boolean']['output'];
   refreshToken: AuthPayload;
   updateCategory: Category;
   updateProduct: Product;
@@ -110,6 +120,7 @@ export type Permission = {
 export type Product = {
   __typename?: 'Product';
   categories: Array<Category>;
+  enabled: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   image?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
@@ -118,6 +129,7 @@ export type Product = {
 
 export type ProductInput = {
   categories: Array<Scalars['String']['input']>;
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
   image?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
   price: Scalars['Float']['input'];
@@ -166,6 +178,14 @@ export type CreateCategoryMutationVariables = Exact<{
 
 export type CreateCategoryMutation = { __typename?: 'Mutation', createCategory: { __typename?: 'Category', id: number, name: string } };
 
+export type UpdateCategoryMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: CategoryInput;
+}>;
+
+
+export type UpdateCategoryMutation = { __typename?: 'Mutation', updateCategory: { __typename?: 'Category', id: number, name: string, parentId?: number | null } };
+
 export type CreateProductMutationVariables = Exact<{
   input: ProductInput;
   file?: InputMaybe<Scalars['Upload']['input']>;
@@ -200,19 +220,19 @@ export type UploadProductImageMutation = { __typename?: 'Mutation', uploadProduc
 export type CategoriesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type CategoriesQuery = { __typename?: 'Query', categories: Array<{ __typename?: 'Category', id: number, name: string }> };
+export type CategoriesQuery = { __typename?: 'Query', categories: Array<{ __typename?: 'Category', id: number, name: string, parentId?: number | null, image?: string | null, description?: string | null, children?: Array<{ __typename?: 'Category', id: number, name: string }> | null }> };
 
 export type ProductsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type ProductsQuery = { __typename?: 'Query', products: Array<{ __typename?: 'Product', id: number, name: string, price: number, image?: string | null, categories: Array<{ __typename?: 'Category', id: number, name: string }> }> };
+export type ProductsQuery = { __typename?: 'Query', products: Array<{ __typename?: 'Product', id: number, name: string, price: number, image?: string | null, enabled: boolean, categories: Array<{ __typename?: 'Category', id: number, name: string }> }> };
 
 export type ProductQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type ProductQuery = { __typename?: 'Query', product?: { __typename?: 'Product', id: number, name: string, price: number, image?: string | null, categories: Array<{ __typename?: 'Category', id: number, name: string }> } | null };
+export type ProductQuery = { __typename?: 'Query', product?: { __typename?: 'Product', id: number, name: string, price: number, image?: string | null, enabled: boolean, categories: Array<{ __typename?: 'Category', id: number, name: string }> } | null };
 
 
 export const CreateCategoryDocument = gql`
@@ -249,6 +269,42 @@ export function useCreateCategoryMutation(baseOptions?: Apollo.MutationHookOptio
 export type CreateCategoryMutationHookResult = ReturnType<typeof useCreateCategoryMutation>;
 export type CreateCategoryMutationResult = Apollo.MutationResult<CreateCategoryMutation>;
 export type CreateCategoryMutationOptions = Apollo.BaseMutationOptions<CreateCategoryMutation, CreateCategoryMutationVariables>;
+export const UpdateCategoryDocument = gql`
+    mutation UpdateCategory($id: ID!, $input: CategoryInput!) {
+  updateCategory(id: $id, input: $input) {
+    id
+    name
+    parentId
+  }
+}
+    `;
+export type UpdateCategoryMutationFn = Apollo.MutationFunction<UpdateCategoryMutation, UpdateCategoryMutationVariables>;
+
+/**
+ * __useUpdateCategoryMutation__
+ *
+ * To run a mutation, you first call `useUpdateCategoryMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateCategoryMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateCategoryMutation, { data, loading, error }] = useUpdateCategoryMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateCategoryMutation(baseOptions?: Apollo.MutationHookOptions<UpdateCategoryMutation, UpdateCategoryMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateCategoryMutation, UpdateCategoryMutationVariables>(UpdateCategoryDocument, options);
+      }
+export type UpdateCategoryMutationHookResult = ReturnType<typeof useUpdateCategoryMutation>;
+export type UpdateCategoryMutationResult = Apollo.MutationResult<UpdateCategoryMutation>;
+export type UpdateCategoryMutationOptions = Apollo.BaseMutationOptions<UpdateCategoryMutation, UpdateCategoryMutationVariables>;
 export const CreateProductDocument = gql`
     mutation CreateProduct($input: ProductInput!, $file: Upload) {
   createProduct(input: $input, file: $file) {
@@ -401,6 +457,13 @@ export const CategoriesDocument = gql`
   categories {
     id
     name
+    parentId
+    image
+    description
+    children {
+      id
+      name
+    }
   }
 }
     `;
@@ -447,6 +510,7 @@ export const ProductsDocument = gql`
       name
     }
     image
+    enabled
   }
 }
     `;
@@ -493,6 +557,7 @@ export const ProductDocument = gql`
       name
     }
     image
+    enabled
   }
 }
     `;

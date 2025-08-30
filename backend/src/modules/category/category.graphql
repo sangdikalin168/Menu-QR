@@ -1,10 +1,19 @@
 type Category {
   id: ID!
   name: String!
+  image: String
+  description: String
+  parentId: ID
+  parent: Category
+  children: [Category!]
+  products: [Product!]
 }
 
 input CategoryInput {
   name: String!
+  image: String
+  description: String
+  parentId: ID
 }
 
 type Query {

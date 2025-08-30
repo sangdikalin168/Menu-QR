@@ -7,7 +7,8 @@ export const resolvers = {
   Upload: GraphQLUpload,
   Query: {
     products: async (_: any, __: any, { prisma }: any) => {
-      return prisma.product.findMany();
+      // Only return enabled products
+      return prisma.product.findMany({ where: { enabled: true } });
     },
     product: async (_: any, { id }: { id: string }, { prisma }: any) => {
       return prisma.product.findUnique({ where: { id } });
@@ -34,7 +35,7 @@ export const resolvers = {
         });
         imageUrl = `/uploads/${newFilename}`;
       }
-      const { name, price, description, categories } = input;
+  const { name, price, description, categories, enabled } = input;
       // Check if all categories exist
       if (categories && categories.length > 0) {
         const foundCategories = await prisma.category.findMany({ where: { id: { in: categories } } });
@@ -48,6 +49,7 @@ export const resolvers = {
           price,
           description,
           image: imageUrl,
+          enabled: enabled !== undefined ? enabled : true,
           categories: categories && categories.length > 0 ? { connect: categories.map((id: string) => ({ id })) } : undefined,
         },
       });
@@ -88,7 +90,7 @@ export const resolvers = {
           }
         }
       }
-      const { name, price, description, categories } = input;
+  const { name, price, description, categories, enabled } = input;
       // Check if all categories exist
       if (categories && categories.length > 0) {
         const foundCategories = await prisma.category.findMany({ where: { id: { in: categories } } });
@@ -103,6 +105,7 @@ export const resolvers = {
           price,
           description,
           image: imageUrl,
+          enabled: enabled !== undefined ? enabled : true,
           categories: categories && categories.length > 0 ? { set: categories.map((id: string) => ({ id })) } : undefined,
         },
       });

@@ -26,6 +26,8 @@ async function startServer() {
     'http://localhost:5173',
     'http://localhost:3000',
     'https://studio.apollographql.com',
+    'http://203.176.133.252:5175',
+    'http://203.176.133.252:4000',
     ...process.env.ALLOWED_ORIGINS?.split(',').map(origin => origin.trim()) || []
   ];
   app.use(cors({

@@ -2,5 +2,12 @@ query Categories {
   categories {
     id
     name
+    parentId
+    image
+    description
+    children {
+      id
+      name
+    }
   }
 }

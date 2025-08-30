@@ -72,6 +72,7 @@ model Product {
   image      String?
   description String?
   price      Float
+    enabled     Boolean   @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -85,6 +86,10 @@ model Category {
   image      String?
   description String?
   products    Product[]
+  parentId    String?  // For sub-category support
+  parent      Category? @relation("CategoryParent", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryParent")
+  deleted_at  DateTime?
 }
 
 model Set {

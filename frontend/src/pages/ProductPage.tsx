@@ -16,19 +16,13 @@ import { useCategoryOptions } from "../hooks/useCategoryOptions";
 
 const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
-// Product type
-type Product = {
-    id: number;
-    name: string;
-    price: number;
-    categories: { id: number; name: string }[];
-    image: string;
-};
+import type { Product } from "../generated/graphql";
 
 export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; setOpen: (v: boolean) => void; editProduct?: Product | null }> = ({ refetch, open, setOpen, editProduct }) => {
     const [name, setName] = useState(editProduct?.name || "");
     const [price, setPrice] = useState<number>(editProduct ? editProduct.price : 0);
-    const [category, setCategory] = useState<string>(editProduct?.categories?.[0]?.id.toString() || "");
+    const [categories, setCategories] = useState<string[]>(editProduct?.categories?.map(c => c.id.toString()) || []);
+    const [enabled, setEnabled] = useState(editProduct?.enabled ?? true);
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [createProduct, { loading: creating }] = useCreateProductMutation();
@@ -36,11 +30,12 @@ export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; s
     const categoryOptions = useCategoryOptions();
 
     React.useEffect(() => {
-        setName(editProduct?.name || "");
-        setPrice(editProduct ? editProduct.price : 0);
-        setCategory(editProduct?.categories?.[0]?.id.toString() || "");
-        setImageFile(null);
-        setImagePreview(editProduct?.image || null);
+    setName(editProduct?.name || "");
+    setPrice(editProduct ? editProduct.price : 0);
+    setCategories(editProduct?.categories?.map(c => c.id.toString()) || []);
+    setEnabled(editProduct?.enabled ?? true);
+    setImageFile(null);
+    setImagePreview(editProduct?.image || null);
     }, [editProduct, open]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,7 +55,8 @@ export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; s
                         input: {
                             name,
                             price: price,
-                            categories: [category],
+                            categories,
+                            enabled,
                             // Do not send image, let backend handle file upload
                         },
                         file: imageFile,
@@ -73,8 +69,9 @@ export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; s
                         input: {
                             name,
                             price: price,
-                            categories: [category],
+                            categories,
                             image: editProduct.image,
+                            enabled,
                         },
                     },
                 });
@@ -85,7 +82,8 @@ export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; s
                     input: {
                         name,
                         price: price,
-                        categories: [category],
+                        categories,
+                        enabled,
                         // Do not send image, let backend handle file upload
                     },
                     file: imageFile,
@@ -94,7 +92,7 @@ export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; s
         }
         setName("");
         setPrice(0);
-        setCategory("");
+    setCategories([]);
         setImageFile(null);
         setImagePreview(null);
         setOpen(false);
@@ -111,6 +109,16 @@ export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; s
                     Fill out the product details and upload an image.
                 </p>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="enabled" className="font-medium">Enabled:</label>
+                        <input
+                            id="enabled"
+                            type="checkbox"
+                            checked={enabled}
+                            onChange={e => setEnabled(e.target.checked)}
+                        />
+                        <span className={enabled ? "text-green-600" : "text-red-600"}>{enabled ? "Enabled" : "Disabled"}</span>
+                    </div>
                     <Input
                         type="text"
                         placeholder="Product Name"
@@ -127,11 +135,11 @@ export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; s
                     />
                     <select
                         className="border rounded px-2 py-1 w-full"
-                        value={category}
-                        onChange={e => setCategory(e.target.value)}
+                        value={categories}
+                        onChange={e => setCategories(Array.from(e.target.selectedOptions, option => option.value))}
+                        multiple
                         required
                     >
-                        <option value="" disabled>Select Category</option>
                         {categoryOptions.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
                         ))}
@@ -141,11 +149,9 @@ export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; s
                         accept="image/*"
                         onChange={handleFileChange}
                     />
-                    {imagePreview && (
-                        <div className="flex justify-center">
-                            <img src={imagePreview.startsWith('/uploads/') ? `${API_URL}${imagePreview}` : imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded border" />
-                        </div>
-                    )}
+                    <div className="flex justify-center">
+                        <img src={imagePreview ? (imagePreview.startsWith('/uploads/') ? `${API_URL}${imagePreview}` : imagePreview) : '/public/default-product.png'} alt="Preview" className="w-32 h-32 object-cover rounded border" />
+                    </div>
                     <DialogFooter>
                         <Button type="submit" disabled={creating || updating}>
                             {creating || updating
@@ -162,24 +168,30 @@ export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; s
     );
 };
 
-// Example usage in your ProductPage component:
-// <ProductCreateForm />
-
-// Mock product data
 
 export default function ProductPage() {
     const { data, loading, error, refetch } = useProductsQuery();
     const products = data?.products ?? [];
     const [openDialog, setOpenDialog] = useState(false);
     const [editProduct, setEditProduct] = useState<Product | null>(null);
+    const [search, setSearch] = useState("");
+
+    const filteredProducts = products.filter(p => {
+        const nameMatch = p.name.toLowerCase().includes(search.toLowerCase());
+        const categoryMatch = p.categories?.some(c => c.name.toLowerCase().includes(search.toLowerCase()));
+        return nameMatch || categoryMatch;
+    });
 
     const columns: ColumnDef<Product>[] = [
         { accessorKey: "id", header: "ID" },
         { accessorKey: "name", header: "Name" },
         { accessorKey: "price", header: "Price" },
-        { accessorKey: "categories", header: "Category", cell: ({ row }) => row.original.categories?.[0]?.name ?? "" },
+        { accessorKey: "categories", header: "Categories", cell: ({ row }) => row.original.categories?.map(c => c.name).join(", ") ?? "" },
         { accessorKey: "image", header: "Image", cell: ({ row }) => (
-            <img src={row.original.image.startsWith('/uploads/') ? `${API_URL}${row.original.image}` : row.original.image} alt={row.original.name} className="w-12 h-12 object-cover rounded" />
+            <img src={row.original.image ? (row.original.image.startsWith('/uploads/') ? `${API_URL}${row.original.image}` : row.original.image) : '/public/default-product.png'} alt={row.original.name} className="w-12 h-12 object-cover rounded" />
+        ) },
+        { accessorKey: "enabled", header: "Status", cell: ({ row }) => (
+            <span className={row.original.enabled ? "text-green-600" : "text-red-600"}>{row.original.enabled ? "Enabled" : "Disabled"}</span>
         ) },
         {
             id: "actions",
@@ -207,10 +219,12 @@ export default function ProductPage() {
             <ProductDialogForm refetch={refetch} open={openDialog} setOpen={setOpenDialog} editProduct={editProduct} />
             <DataTable
                 columns={columns}
-                data={products.map(p => ({ ...p, image: p.image ?? "" }))}
+                data={filteredProducts.map(p => ({ ...p, image: p.image ?? "" }))}
                 loading={loading}
                 error={error?.message}
                 tableId="product-table"
+                searchTerm={search}
+                onSearch={setSearch}
             />
         </div>
     );
