@@ -16,5 +16,5 @@ generates:
       withComponent: false
       withHOC: false
       scalars:
-        ID: number
+        ID: string
         DateTime: string

@@ -66,15 +66,6 @@ const Dashboard: React.FC = () => {
 
     if (error) return <div>Error loading products</div>;
 
-    // Sub-categories shown when a top-level or child category is selected
-    // Always show sub-categories if a top-level is selected or if selectedCategory is a child of the current top-level
-    const showSubCategories = (() => {
-        if (selectedCategory === 'All') return false;
-        // Is top-level selected?
-        if (topLevelCategories.some(cat => cat.name === selectedCategory)) return true;
-        // Is a child selected?
-        return topLevelCategories.some(cat => (cat.children ?? []).some(sub => sub.name === selectedCategory));
-    })();
 
     return (
         <div className="flex flex-1 flex-col">

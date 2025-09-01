@@ -10,7 +10,7 @@ export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' |
 const defaultOptions = {} as const;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: number; output: number; }
+  ID: { input: string; output: string; }
   String: { input: string; output: string; }
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
@@ -176,7 +176,7 @@ export type CreateCategoryMutationVariables = Exact<{
 }>;
 
 
-export type CreateCategoryMutation = { __typename?: 'Mutation', createCategory: { __typename?: 'Category', id: number, name: string } };
+export type CreateCategoryMutation = { __typename?: 'Mutation', createCategory: { __typename?: 'Category', id: string, name: string } };
 
 export type UpdateCategoryMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -184,7 +184,7 @@ export type UpdateCategoryMutationVariables = Exact<{
 }>;
 
 
-export type UpdateCategoryMutation = { __typename?: 'Mutation', updateCategory: { __typename?: 'Category', id: number, name: string, parentId?: number | null } };
+export type UpdateCategoryMutation = { __typename?: 'Mutation', updateCategory: { __typename?: 'Category', id: string, name: string, parentId?: string | null } };
 
 export type CreateProductMutationVariables = Exact<{
   input: ProductInput;
@@ -192,7 +192,7 @@ export type CreateProductMutationVariables = Exact<{
 }>;
 
 
-export type CreateProductMutation = { __typename?: 'Mutation', createProduct: { __typename?: 'Product', id: number, name: string, price: number, image?: string | null, categories: Array<{ __typename?: 'Category', id: number, name: string }> } };
+export type CreateProductMutation = { __typename?: 'Mutation', createProduct: { __typename?: 'Product', id: string, name: string, price: number, image?: string | null, categories: Array<{ __typename?: 'Category', id: string, name: string }> } };
 
 export type UpdateProductMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -201,7 +201,7 @@ export type UpdateProductMutationVariables = Exact<{
 }>;
 
 
-export type UpdateProductMutation = { __typename?: 'Mutation', updateProduct: { __typename: 'Product', id: number, name: string, price: number, image?: string | null, categories: Array<{ __typename: 'Category', id: number, name: string }> } };
+export type UpdateProductMutation = { __typename?: 'Mutation', updateProduct: { __typename: 'Product', id: string, name: string, price: number, image?: string | null, categories: Array<{ __typename: 'Category', id: string, name: string }> } };
 
 export type DeleteProductMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -220,19 +220,19 @@ export type UploadProductImageMutation = { __typename?: 'Mutation', uploadProduc
 export type CategoriesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type CategoriesQuery = { __typename?: 'Query', categories: Array<{ __typename?: 'Category', id: number, name: string, parentId?: number | null, image?: string | null, description?: string | null, children?: Array<{ __typename?: 'Category', id: number, name: string }> | null }> };
+export type CategoriesQuery = { __typename?: 'Query', categories: Array<{ __typename?: 'Category', id: string, name: string, parentId?: string | null, image?: string | null, description?: string | null, children?: Array<{ __typename?: 'Category', id: string, name: string }> | null }> };
 
 export type ProductsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type ProductsQuery = { __typename?: 'Query', products: Array<{ __typename?: 'Product', id: number, name: string, price: number, image?: string | null, enabled: boolean, categories: Array<{ __typename?: 'Category', id: number, name: string }> }> };
+export type ProductsQuery = { __typename?: 'Query', products: Array<{ __typename?: 'Product', id: string, name: string, price: number, image?: string | null, enabled: boolean, categories: Array<{ __typename?: 'Category', id: string, name: string }> }> };
 
 export type ProductQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type ProductQuery = { __typename?: 'Query', product?: { __typename?: 'Product', id: number, name: string, price: number, image?: string | null, enabled: boolean, categories: Array<{ __typename?: 'Category', id: number, name: string }> } | null };
+export type ProductQuery = { __typename?: 'Query', product?: { __typename?: 'Product', id: string, name: string, price: number, image?: string | null, enabled: boolean, categories: Array<{ __typename?: 'Category', id: string, name: string }> } | null };
 
 
 export const CreateCategoryDocument = gql`

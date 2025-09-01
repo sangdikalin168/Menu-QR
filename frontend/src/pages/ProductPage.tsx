@@ -17,6 +17,7 @@ import { useCategoryOptions } from "../hooks/useCategoryOptions";
 const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
 import type { Product } from "../generated/graphql";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; setOpen: (v: boolean) => void; editProduct?: Product | null }> = ({ refetch, open, setOpen, editProduct }) => {
     const [name, setName] = useState(editProduct?.name || "");
@@ -30,12 +31,12 @@ export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; s
     const categoryOptions = useCategoryOptions();
 
     React.useEffect(() => {
-    setName(editProduct?.name || "");
-    setPrice(editProduct ? editProduct.price : 0);
-    setCategories(editProduct?.categories?.map(c => c.id.toString()) || []);
-    setEnabled(editProduct?.enabled ?? true);
-    setImageFile(null);
-    setImagePreview(editProduct?.image || null);
+        setName(editProduct?.name || "");
+        setPrice(editProduct ? editProduct.price : 0);
+        setCategories(editProduct?.categories?.map(c => c.id.toString()) || []);
+        setEnabled(editProduct?.enabled ?? true);
+        setImageFile(null);
+        setImagePreview(editProduct?.image || null);
     }, [editProduct, open]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,7 +93,7 @@ export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; s
         }
         setName("");
         setPrice(0);
-    setCategories([]);
+        setCategories([]);
         setImageFile(null);
         setImagePreview(null);
         setOpen(false);
@@ -133,17 +134,29 @@ export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; s
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrice(parseFloat(e.target.value) || 0)}
                         required
                     />
-                    <select
-                        className="border rounded px-2 py-1 w-full"
-                        value={categories}
-                        onChange={e => setCategories(Array.from(e.target.selectedOptions, option => option.value))}
-                        multiple
-                        required
-                    >
-                        {categoryOptions.map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                        ))}
-                    </select>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger className="border rounded px-2 py-1 w-full">
+                            {categories.length > 0
+                                ? categoryOptions.filter(opt => categories.includes(String(opt.value))).map(opt => opt.label).join(", ")
+                                : "Select categories"}
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            {categoryOptions.map(opt => (
+                                <DropdownMenuItem
+                                    key={opt.value}
+                                    onClick={() => {
+                                        if (!categories.includes(String(opt.value))) {
+                                            setCategories([...categories, String(opt.value)]);
+                                        }
+                                    }}
+                                    className={categories.includes(String(opt.value)) ? "bg-blue-100 font-semibold" : ""}
+                                >
+                                    {opt.label}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
                     <Input
                         type="file"
                         accept="image/*"
@@ -187,12 +200,16 @@ export default function ProductPage() {
         { accessorKey: "name", header: "Name" },
         { accessorKey: "price", header: "Price" },
         { accessorKey: "categories", header: "Categories", cell: ({ row }) => row.original.categories?.map(c => c.name).join(", ") ?? "" },
-        { accessorKey: "image", header: "Image", cell: ({ row }) => (
-            <img src={row.original.image ? (row.original.image.startsWith('/uploads/') ? `${API_URL}${row.original.image}` : row.original.image) : '/public/default-product.png'} alt={row.original.name} className="w-12 h-12 object-cover rounded" />
-        ) },
-        { accessorKey: "enabled", header: "Status", cell: ({ row }) => (
-            <span className={row.original.enabled ? "text-green-600" : "text-red-600"}>{row.original.enabled ? "Enabled" : "Disabled"}</span>
-        ) },
+        {
+            accessorKey: "image", header: "Image", cell: ({ row }) => (
+                <img src={row.original.image ? (row.original.image.startsWith('/uploads/') ? `${API_URL}${row.original.image}` : row.original.image) : '/public/default-product.png'} alt={row.original.name} className="w-12 h-12 object-cover rounded" />
+            )
+        },
+        {
+            accessorKey: "enabled", header: "Status", cell: ({ row }) => (
+                <span className={row.original.enabled ? "text-green-600" : "text-red-600"}>{row.original.enabled ? "Enabled" : "Disabled"}</span>
+            )
+        },
         {
             id: "actions",
             header: "Actions",

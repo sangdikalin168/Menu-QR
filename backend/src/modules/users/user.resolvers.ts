@@ -70,7 +70,13 @@ export const resolvers = {
         const refreshToken = jwt.sign({ userId: user.id }, process.env.JWT_REFRESH_SECRET || 'refresh_secret', {
           expiresIn: '7d',
         });
-        // Save refreshToken in DB
+
+        // Clean up old refresh tokens for this user
+        await prisma.refreshToken.deleteMany({
+          where: { userId: user.id }
+        });
+
+        // Save new refreshToken in DB
         await prisma.refreshToken.create({
           data: {
             token: refreshToken,
@@ -154,19 +160,41 @@ export const resolvers = {
       try {
         payload = jwt.verify(token, process.env.JWT_REFRESH_SECRET || 'refresh_secret');
       } catch (e) {
+        console.error('JWT verification failed:', e);
         throw new Error('Invalid refresh token');
       }
+
       const dbToken = await prisma.refreshToken.findUnique({ where: { token } });
-      if (!dbToken || dbToken.expiresAt < new Date()) {
-        throw new Error('Invalid or expired refresh token');
+      console.log('DB Token:', dbToken);
+      console.log('Current time:', new Date());
+      
+      if (!dbToken) {
+        throw new Error('Refresh token not found in database');
       }
+      
+      if (dbToken.expiresAt < new Date()) {
+        console.log('Token expired at:', dbToken.expiresAt);
+        // Clean up expired token
+        await prisma.refreshToken.delete({ where: { token } });
+        throw new Error('Refresh token has expired');
+      }
+
       const user = await prisma.user.findUnique({ where: { id: dbToken.userId } });
       if (!user) {
         throw new Error('User not found');
       }
-      const accessToken = jwt.sign({ userId: user.id, phone: user.phone }, process.env.JWT_SECRET || 'secret', {
+
+      // Generate new access token
+      const accessToken = jwt.sign({ userId: user.id, phone: user.phone, username: user.username }, process.env.JWT_SECRET || 'secret', {
         expiresIn: '15m',
       });
+
+      // Optionally, update the refresh token's expiry (refresh the refresh token)
+      await prisma.refreshToken.update({
+        where: { token },
+        data: { expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }
+      });
+
       return { accessToken };
     },
     logout: async (_: any, __: any, context: any) => {

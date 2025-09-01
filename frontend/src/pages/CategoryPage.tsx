@@ -1,5 +1,3 @@
-import React, { useState } from "react";
-import DataTable from "../components/common/DataTable";
 import { type ColumnDef } from "@tanstack/react-table";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -14,6 +12,9 @@ import {
 } from "../components/ui/dialog";
 
 import type { Category } from "../generated/graphql";
+import { useState } from "react";
+import React from "react";
+import DataTable from "@/components/common/DataTable";
 
 export const CategoryDialogForm: React.FC<{ refetch: () => void; open: boolean; setOpen: (v: boolean) => void; editCategory?: Category | null }> = ({ refetch, open, setOpen, editCategory }) => {
     const [name, setName] = useState(editCategory?.name || "");
@@ -30,16 +31,21 @@ export const CategoryDialogForm: React.FC<{ refetch: () => void; open: boolean; 
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const parentIdValue = parentId ? Number(parentId) : undefined;
-        if (editCategory) {
-            await updateCategory({ variables: { id: editCategory.id, input: { name, parentId: parentIdValue } } });
-        } else {
-            await createCategory({ variables: { input: { name, parentId: parentIdValue } } });
+        const parentIdValue = parentId ? parentId : null;
+        console.log('Submitting category with parentId:', parentIdValue);
+        try {
+            if (editCategory) {
+                await updateCategory({ variables: { id: editCategory.id, input: { name, parentId: parentIdValue } } });
+            } else {
+                await createCategory({ variables: { input: { name, parentId: parentIdValue } } });
+            }
+            setName("");
+            setParentId("");
+            setOpen(false);
+            refetch();
+        } catch (error) {
+            console.error('Error saving category:', error);
         }
-        setName("");
-        setParentId("");
-        setOpen(false);
-        refetch();
     };
 
     return (

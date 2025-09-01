@@ -23,8 +23,7 @@ async function startServer() {
 
   // CORS middleware
   const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:3000',
+    'http://localhost:5175',
     'https://studio.apollographql.com',
     'http://203.176.133.252:5175',
     'http://203.176.133.252:4000',
