@@ -15,8 +15,16 @@ const SkeletonCard: React.FC = () => (
 const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
 const Dashboard: React.FC = () => {
-    const { data: categoryData, loading: categoryLoading, error: categoryError } = useCategoriesQuery();
-    const { data, loading, error } = useProductsQuery();
+    const { data: categoryData, loading: _categoryLoading, error: _categoryError } = useCategoriesQuery();
+    // Use a large page size to get all products for the dashboard
+    const { data, loading, error } = useProductsQuery({
+        variables: {
+            pagination: {
+                page: 1,
+                limit: 1000 // Large enough to get all products
+            }
+        }
+    });
     const [displayType, setDisplayType] = useState<'grid' | 'row'>('grid');
     const [selectedCategory, setSelectedCategory] = useState<string>('All');
     const [selectedTopLevel, setSelectedTopLevel] = useState<string | null>(null);
@@ -41,7 +49,7 @@ const Dashboard: React.FC = () => {
         ? topLevelCategories.find(cat => cat.name === selectedTopLevel)?.children ?? []
         : [];
 
-    const filteredProducts = data?.products?.filter(product => {
+    const filteredProducts = data?.products?.items?.filter(product => {
         if (selectedCategory === 'All') return true;
         // If selectedCategory is a top-level category, show products related to that category or its sub-categories
         const topCat = topLevelCategories.find(cat => cat.name === selectedCategory);

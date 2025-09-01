@@ -1,5 +1,5 @@
-query Products($pagination: PaginationInput) {
-  products(pagination: $pagination) {
+query Products($pagination: PaginationInput, $search: String) {
+  products(pagination: $pagination, search: $search) {
     items {
       id
       name
@@ -19,20 +19,6 @@ query Products($pagination: PaginationInput) {
       hasPreviousPage
       limit
     }
-  }
-}
-
-query AllProducts {
-  allProducts {
-    id
-    name
-    price
-    categories {
-      id
-      name
-    }
-    image
-    enabled
   }
 }
 

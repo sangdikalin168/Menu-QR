@@ -240,7 +240,8 @@ export default function ProductPage() {
                 limit: pageSize,
                 sortBy: "name",
                 sortOrder: SortOrder.Asc
-            }
+            },
+            search: search.trim() || undefined // Send search parameter to backend
         },
         errorPolicy: 'all'
     });
@@ -251,14 +252,8 @@ export default function ProductPage() {
     const [openDialog, setOpenDialog] = useState(false);
     const [editProduct, setEditProduct] = useState<Product | null>(null);
 
-    // Filter products based on search (client-side for current page)
-    const filteredProducts = search 
-        ? products.filter(p => {
-            const nameMatch = p.name.toLowerCase().includes(search.toLowerCase());
-            const categoryMatch = p.categories?.some(c => c.name.toLowerCase().includes(search.toLowerCase()));
-            return nameMatch || categoryMatch;
-        })
-        : products;
+    // No need for client-side filtering since we're using server-side search
+    const filteredProducts = products;
 
     // Pagination handlers for DataTable
     const handlePageChange = (newPage: number) => {
@@ -268,6 +263,13 @@ export default function ProductPage() {
     const handlePageSizeChange = (newPageSize: number) => {
         setCurrentPage(0); // Reset to first page when changing page size
         setPageSize(newPageSize);
+    };
+
+    // Search handler that resets pagination and refetches data
+    const handleSearch = (searchTerm: string) => {
+        setSearch(searchTerm);
+        setCurrentPage(0); // Reset to first page when searching
+        // The useProductsQuery will automatically refetch when search state changes
     };
 
     const columns: ColumnDef<Product>[] = [
@@ -316,7 +318,7 @@ export default function ProductPage() {
                 error={error?.message}
                 tableId="product-table"
                 searchTerm={search}
-                onSearch={setSearch}
+                onSearch={handleSearch}
                 page={currentPage}
                 pageSize={pageSize}
                 totalItems={pageInfo?.totalItems || 0}

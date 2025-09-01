@@ -7,12 +7,23 @@ import { calculatePagination, createPaginationResult } from '../../utils/paginat
 export const resolvers = {
   Upload: GraphQLUpload,
   Query: {
-    products: async (_: any, { pagination }: any, { prisma }: any) => {
+    products: async (_: any, { pagination, search }: any, { prisma }: any) => {
       const { skip, take, orderBy, page, limit } = calculatePagination(pagination || {});
+      
+      // Build where clause with optional search functionality
+      const where: any = { enabled: true };
+      
+      // Only add search filters if search parameter is provided and not empty
+      if (search && typeof search === 'string' && search.trim().length > 0) {
+        where.OR = [
+          { name: { contains: search.trim(), mode: 'insensitive' } },
+          { description: { contains: search.trim(), mode: 'insensitive' } }
+        ];
+      }
       
       const [items, totalItems] = await Promise.all([
         prisma.product.findMany({
-          where: { enabled: true },
+          where,
           skip,
           take,
           orderBy,
@@ -20,19 +31,10 @@ export const resolvers = {
             categories: true,
           },
         }),
-        prisma.product.count({ where: { enabled: true } }),
+        prisma.product.count({ where }),
       ]);
 
       return createPaginationResult(items, totalItems, page, limit);
-    },
-    allProducts: async (_: any, __: any, { prisma }: any) => {
-      // Keep for backward compatibility - returns all enabled products
-      return prisma.product.findMany({ 
-        where: { enabled: true },
-        include: {
-          categories: true,
-        },
-      });
     },
     product: async (_: any, { id }: { id: string }, { prisma }: any) => {
       return prisma.product.findUnique({ 
