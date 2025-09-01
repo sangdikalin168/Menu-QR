@@ -2,16 +2,45 @@
 import { GraphQLUpload } from 'graphql-upload-minimal';
 import path from 'path';
 import fs from 'fs';
+import { calculatePagination, createPaginationResult } from '../../utils/pagination';
 
 export const resolvers = {
   Upload: GraphQLUpload,
   Query: {
-    products: async (_: any, __: any, { prisma }: any) => {
-      // Only return enabled products
-      return prisma.product.findMany({ where: { enabled: true } });
+    products: async (_: any, { pagination }: any, { prisma }: any) => {
+      const { skip, take, orderBy, page, limit } = calculatePagination(pagination || {});
+      
+      const [items, totalItems] = await Promise.all([
+        prisma.product.findMany({
+          where: { enabled: true },
+          skip,
+          take,
+          orderBy,
+          include: {
+            categories: true,
+          },
+        }),
+        prisma.product.count({ where: { enabled: true } }),
+      ]);
+
+      return createPaginationResult(items, totalItems, page, limit);
+    },
+    allProducts: async (_: any, __: any, { prisma }: any) => {
+      // Keep for backward compatibility - returns all enabled products
+      return prisma.product.findMany({ 
+        where: { enabled: true },
+        include: {
+          categories: true,
+        },
+      });
     },
     product: async (_: any, { id }: { id: string }, { prisma }: any) => {
-      return prisma.product.findUnique({ where: { id } });
+      return prisma.product.findUnique({ 
+        where: { id },
+        include: {
+          categories: true,
+        },
+      });
     },
   },
   Mutation: {

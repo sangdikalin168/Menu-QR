@@ -11,7 +11,7 @@ import {
     DialogFooter,
     DialogClose,
 } from "../components/ui/dialog";
-import { useCreateProductMutation, useProductsQuery, useUpdateProductMutation } from "../generated/graphql";
+import { useCreateProductMutation, useProductsQuery, useUpdateProductMutation, SortOrder } from "../generated/graphql";
 import { useCategoryOptions } from "../hooks/useCategoryOptions";
 
 const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
@@ -229,17 +229,46 @@ export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; s
 
 
 export default function ProductPage() {
-    const { data, loading, error, refetch } = useProductsQuery();
-    const products = data?.products ?? [];
+    const [currentPage, setCurrentPage] = useState(0); // DataTable uses 0-based pagination
+    const [pageSize, setPageSize] = useState(10);
+    const [search, setSearch] = useState("");
+    
+    const { data, loading, error, refetch } = useProductsQuery({
+        variables: { 
+            pagination: {
+                page: currentPage + 1, // Backend uses 1-based pagination
+                limit: pageSize,
+                sortBy: "name",
+                sortOrder: SortOrder.Asc
+            }
+        },
+        errorPolicy: 'all'
+    });
+
+    const products = data?.products?.items ?? [];
+    const pageInfo = data?.products?.pageInfo;
+    
     const [openDialog, setOpenDialog] = useState(false);
     const [editProduct, setEditProduct] = useState<Product | null>(null);
-    const [search, setSearch] = useState("");
 
-    const filteredProducts = products.filter(p => {
-        const nameMatch = p.name.toLowerCase().includes(search.toLowerCase());
-        const categoryMatch = p.categories?.some(c => c.name.toLowerCase().includes(search.toLowerCase()));
-        return nameMatch || categoryMatch;
-    });
+    // Filter products based on search (client-side for current page)
+    const filteredProducts = search 
+        ? products.filter(p => {
+            const nameMatch = p.name.toLowerCase().includes(search.toLowerCase());
+            const categoryMatch = p.categories?.some(c => c.name.toLowerCase().includes(search.toLowerCase()));
+            return nameMatch || categoryMatch;
+        })
+        : products;
+
+    // Pagination handlers for DataTable
+    const handlePageChange = (newPage: number) => {
+        setCurrentPage(newPage); // DataTable passes 0-based page
+    };
+
+    const handlePageSizeChange = (newPageSize: number) => {
+        setCurrentPage(0); // Reset to first page when changing page size
+        setPageSize(newPageSize);
+    };
 
     const columns: ColumnDef<Product>[] = [
         { accessorKey: "id", header: "ID" },
@@ -277,9 +306,9 @@ export default function ProductPage() {
 
     return (
         <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">Product Management</h1>
             <Button className="mb-4" onClick={handleAdd}>Add Product</Button>
             <ProductDialogForm refetch={refetch} open={openDialog} setOpen={setOpenDialog} editProduct={editProduct} />
+            
             <DataTable
                 columns={columns}
                 data={filteredProducts.map(p => ({ ...p, image: p.image ?? "" }))}
@@ -288,6 +317,11 @@ export default function ProductPage() {
                 tableId="product-table"
                 searchTerm={search}
                 onSearch={setSearch}
+                page={currentPage}
+                pageSize={pageSize}
+                totalItems={pageInfo?.totalItems || 0}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
             />
         </div>
     );

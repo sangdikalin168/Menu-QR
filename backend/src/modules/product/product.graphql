@@ -15,6 +15,32 @@ input ProductInput {
   enabled: Boolean
 }
 
+input PaginationInput {
+  page: Int = 1
+  limit: Int = 10
+  sortBy: String = "createdAt"
+  sortOrder: SortOrder = DESC
+}
+
+enum SortOrder {
+  ASC
+  DESC
+}
+
+type PageInfo {
+  currentPage: Int!
+  totalPages: Int!
+  totalItems: Int!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  limit: Int!
+}
+
+type PaginatedProducts {
+  items: [Product!]!
+  pageInfo: PageInfo!
+}
+
 scalar Upload
 
 type Mutation {
@@ -25,6 +51,7 @@ type Mutation {
 }
 
 type Query {
-  products: [Product!]!
+  products(pagination: PaginationInput): PaginatedProducts!
+  allProducts: [Product!]!
   product(id: ID!): Product
 }

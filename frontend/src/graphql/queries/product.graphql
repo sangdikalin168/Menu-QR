@@ -1,5 +1,29 @@
-query Products {
-  products {
+query Products($pagination: PaginationInput) {
+  products(pagination: $pagination) {
+    items {
+      id
+      name
+      price
+      categories {
+        id
+        name
+      }
+      image
+      enabled
+    }
+    pageInfo {
+      currentPage
+      totalPages
+      totalItems
+      hasNextPage
+      hasPreviousPage
+      limit
+    }
+  }
+}
+
+query AllProducts {
+  allProducts {
     id
     name
     price
