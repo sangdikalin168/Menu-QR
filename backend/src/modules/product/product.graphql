@@ -52,5 +52,6 @@ type Mutation {
 
 type Query {
   products(pagination: PaginationInput, search: String): PaginatedProducts!
+  allProducts(search: String): [Product!]!
   product(id: ID!): Product
 }

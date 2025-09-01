@@ -36,6 +36,26 @@ export const resolvers = {
 
       return createPaginationResult(items, totalItems, page, limit);
     },
+    allProducts: async (_: any, { search }: any, { prisma }: any) => {
+      // For dashboard and other views that need all products
+      const where: any = { enabled: true };
+      
+      // Only add search filters if search parameter is provided and not empty
+      if (search && typeof search === 'string' && search.trim().length > 0) {
+        where.OR = [
+          { name: { contains: search.trim(), mode: 'insensitive' } },
+          { description: { contains: search.trim(), mode: 'insensitive' } }
+        ];
+      }
+      
+      return prisma.product.findMany({ 
+        where,
+        include: {
+          categories: true,
+        },
+        orderBy: { name: 'asc' } // Default ordering for dashboard
+      });
+    },
     product: async (_: any, { id }: { id: string }, { prisma }: any) => {
       return prisma.product.findUnique({ 
         where: { id },

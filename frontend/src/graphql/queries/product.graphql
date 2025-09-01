@@ -22,6 +22,20 @@ query Products($pagination: PaginationInput, $search: String) {
   }
 }
 
+query AllProducts($search: String) {
+  allProducts(search: $search) {
+    id
+    name
+    price
+    categories {
+      id
+      name
+    }
+    image
+    enabled
+  }
+}
+
 query Product($id: ID!) {
   product(id: $id) {
     id

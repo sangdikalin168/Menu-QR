@@ -1,7 +1,7 @@
 "use client"
 import * as React from 'react';
-import { useState } from 'react';
-import { useCategoriesQuery, useProductsQuery } from '../generated/graphql';
+import { useState, useCallback } from 'react';
+import { useCategoriesQuery, useAllProductsQuery } from '../generated/graphql';
 import { Skeleton } from '../components/ui/skeleton';
 
 const SkeletonCard: React.FC = () => (
@@ -16,54 +16,65 @@ const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
 const Dashboard: React.FC = () => {
     const { data: categoryData, loading: _categoryLoading, error: _categoryError } = useCategoriesQuery();
-    // Use a large page size to get all products for the dashboard
-    const { data, loading, error } = useProductsQuery({
-        variables: {
-            pagination: {
-                page: 1,
-                limit: 1000 // Large enough to get all products
-            }
-        }
-    });
+    // Use allProducts to get ALL products for the dashboard (not paginated)
+    const { data, loading, error } = useAllProductsQuery();
     const [displayType, setDisplayType] = useState<'grid' | 'row'>('grid');
     const [selectedCategory, setSelectedCategory] = useState<string>('All');
     const [selectedTopLevel, setSelectedTopLevel] = useState<string | null>(null);
 
     // Use all categories from the Category table
-    const allCategories = categoryData?.categories ?? [];
-    const topLevelCategories = allCategories.filter(cat => !cat.parentId);
+    const allCategories = React.useMemo(() => categoryData?.categories ?? [], [categoryData?.categories]);
+    const topLevelCategories = React.useMemo(() => allCategories.filter(cat => !cat.parentId), [allCategories]);
 
     // When a top-level category is clicked, update selectedTopLevel
-    const handleTopLevelClick = (catName: string) => {
+    const handleTopLevelClick = useCallback((catName: string) => {
         setSelectedCategory(catName);
         setSelectedTopLevel(catName);
-    };
+    }, []);
 
     // When a sub-category is clicked, keep selectedTopLevel
-    const handleSubCategoryClick = (subName: string) => {
+    const handleSubCategoryClick = useCallback((subName: string) => {
         setSelectedCategory(subName);
-    };
+    }, []);
 
     // Sub-categories for the currently selected top-level
-    const subCategories = selectedTopLevel
-        ? topLevelCategories.find(cat => cat.name === selectedTopLevel)?.children ?? []
-        : [];
+    const subCategories = React.useMemo(() => {
+        return selectedTopLevel
+            ? topLevelCategories.find(cat => cat.name === selectedTopLevel)?.children ?? []
+            : [];
+    }, [selectedTopLevel, topLevelCategories]);
 
-    const filteredProducts = data?.products?.items?.filter(product => {
-        if (selectedCategory === 'All') return true;
-        // If selectedCategory is a top-level category, show products related to that category or its sub-categories
-        const topCat = topLevelCategories.find(cat => cat.name === selectedCategory);
-        if (topCat) {
-            // Get all sub-category names
-            const subCatNames = (topCat.children ?? []).map(sub => sub.name);
-            return product.categories?.some(cat => cat.name === selectedCategory || subCatNames.includes(cat.name));
-        }
-        // Otherwise, filter by sub-category
-        return product.categories?.some(cat => cat.name === selectedCategory);
-    }) ?? [];
+    const filteredProducts = React.useMemo(() => {
+        const products = data?.allProducts ?? [];
+        
+        if (selectedCategory === 'All') return products;
+        
+        return products.filter(product => {
+            // If selectedCategory is a top-level category, show products related to that category or its sub-categories
+            const topCat = topLevelCategories.find(cat => cat.name === selectedCategory);
+            if (topCat) {
+                // Get all sub-category names
+                const subCatNames = (topCat.children ?? []).map(sub => sub.name);
+                return product.categories?.some(cat => cat.name === selectedCategory || subCatNames.includes(cat.name));
+            }
+            // Otherwise, filter by sub-category
+            return product.categories?.some(cat => cat.name === selectedCategory);
+        });
+    }, [data?.allProducts, selectedCategory, topLevelCategories]);
+
+    // Handler for "All" button
+    const handleAllClick = useCallback(() => {
+        setSelectedCategory("All");
+        setSelectedTopLevel(null);
+    }, []);
+
+    // Handler for display type toggle
+    const handleDisplayTypeToggle = useCallback(() => {
+        setDisplayType(prev => prev === 'grid' ? 'row' : 'grid');
+    }, []);
 
     const [currentPromo, setCurrentPromo] = useState(0);
-    const promotionImages = ['/public/promo1.jpg', '/public/promo2.jpg', '/public/promo3.jpg'];
+    const promotionImages = React.useMemo(() => ['/public/promo1.jpg', '/public/promo2.jpg', '/public/promo3.jpg'], []);
 
     React.useEffect(() => {
         const interval = setInterval(() => {
@@ -94,7 +105,7 @@ const Dashboard: React.FC = () => {
             <div className="w-full flex gap-2 px-2 mb-4">
                 <button
                     key="all"
-                    onClick={() => { setSelectedCategory("All"); setSelectedTopLevel(null); }}
+                    onClick={handleAllClick}
                     className={`w-full px-2 py-2 rounded-lg font-semibold text-lg transition ${selectedCategory === "All" ? 'bg-blue-700 text-white' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
                 >
                     All
@@ -126,7 +137,7 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center justify-between px-2 mb-2">
                 <h1 className="text-2xl font-bold">{selectedCategory}</h1>
                 <button
-                    onClick={() => setDisplayType(displayType === 'grid' ? 'row' : 'grid')}
+                    onClick={handleDisplayTypeToggle}
                     className="px-3 py-2 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center ml-2"
                     title={displayType === 'grid' ? 'Switch to Row View' : 'Switch to Grid View'}
                 >
