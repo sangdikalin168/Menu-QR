@@ -67,9 +67,9 @@ export const CategoryDialogForm: React.FC<{ refetch: () => void; open: boolean; 
                         value={parentId}
                         onChange={e => setParentId(e.target.value)}
                     >
-                        <option value="">No Parent (Top Level)</option>
+                        <option value="">🔓 No Parent (Top Level Category)</option>
                         {categoryOptions.map(opt => (
-                            <option key={opt.id} value={opt.id}>{opt.name}</option>
+                            <option key={opt.id} value={opt.id}>📁 {opt.name}</option>
                         ))}
                     </select>
                     <DialogFooter>

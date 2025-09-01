@@ -134,28 +134,74 @@ export const ProductDialogForm: React.FC<{ refetch: () => void; open: boolean; s
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrice(parseFloat(e.target.value) || 0)}
                         required
                     />
-                    <DropdownMenu>
-                        <DropdownMenuTrigger className="border rounded px-2 py-1 w-full">
-                            {categories.length > 0
-                                ? categoryOptions.filter(opt => categories.includes(String(opt.value))).map(opt => opt.label).join(", ")
-                                : "Select categories"}
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            {categoryOptions.map(opt => (
-                                <DropdownMenuItem
-                                    key={opt.value}
-                                    onClick={() => {
-                                        if (!categories.includes(String(opt.value))) {
-                                            setCategories([...categories, String(opt.value)]);
-                                        }
-                                    }}
-                                    className={categories.includes(String(opt.value)) ? "bg-blue-100 font-semibold" : ""}
-                                >
-                                    {opt.label}
-                                </DropdownMenuItem>
-                            ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="space-y-2">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger className="border rounded px-2 py-1 w-full text-left">
+                                {categories.length > 0
+                                    ? `${categories.length} categories selected`
+                                    : "Select categories"}
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                {categoryOptions.map(opt => (
+                                    <DropdownMenuItem
+                                        key={opt.value}
+                                        onClick={() => {
+                                            const categoryId = String(opt.value);
+                                            if (categories.includes(categoryId)) {
+                                                // Remove category (deselect)
+                                                setCategories(categories.filter(id => id !== categoryId));
+                                            } else {
+                                                // Add category (select)
+                                                setCategories([...categories, categoryId]);
+                                            }
+                                        }}
+                                        className={categories.includes(String(opt.value)) ? "bg-blue-100 font-semibold" : ""}
+                                    >
+                                        <span className="mr-2">
+                                            {categories.includes(String(opt.value)) ? "✓" : "○"}
+                                        </span>
+                                        {opt.label}
+                                    </DropdownMenuItem>
+                                ))}
+                                {categories.length > 0 && (
+                                    <>
+                                        <div className="border-t my-1"></div>
+                                        <DropdownMenuItem
+                                            onClick={() => setCategories([])}
+                                            className="text-red-600 font-semibold"
+                                        >
+                                            🗑️ Clear all categories
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        
+                        {/* Display selected categories with individual remove buttons */}
+                        {categories.length > 0 && (
+                            <div className="flex flex-wrap gap-2 p-2 border rounded bg-gray-50">
+                                {categories.map(categoryId => {
+                                    const category = categoryOptions.find(opt => String(opt.value) === categoryId);
+                                    return category ? (
+                                        <span
+                                            key={categoryId}
+                                            className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm"
+                                        >
+                                            {category.label}
+                                            <button
+                                                type="button"
+                                                onClick={() => setCategories(categories.filter(id => id !== categoryId))}
+                                                className="ml-1 text-blue-600 hover:text-red-600 font-bold"
+                                                title="Remove category"
+                                            >
+                                                ×
+                                            </button>
+                                        </span>
+                                    ) : null;
+                                })}
+                            </div>
+                        )}
+                    </div>
 
                     <Input
                         type="file"
