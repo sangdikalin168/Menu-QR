@@ -89,7 +89,7 @@ const Dashboard: React.FC = () => {
     return (
         <div className="flex flex-1 flex-col">
             {/* Promotion Slide */}
-            <div className="w-full flex justify-center items-center mb-4">
+            {/* <div className="w-full flex justify-center items-center mb-4">
                 <div className="relative w-full max-w-xl h-40 overflow-hidden rounded-lg shadow">
                     {promotionImages.map((img, idx) => (
                         <img
@@ -100,16 +100,10 @@ const Dashboard: React.FC = () => {
                         />
                     ))}
                 </div>
-            </div>
+            </div> */}
+
             {/* Top Level Category Buttons below promotion */}
-            <div className="w-full flex gap-2 px-2 mb-4">
-                <button
-                    key="all"
-                    onClick={handleAllClick}
-                    className={`w-full px-2 py-2 rounded-lg font-semibold text-lg transition ${selectedCategory === "All" ? 'bg-blue-700 text-white' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
-                >
-                    All
-                </button>
+            <div className="w-full flex gap-2 px-2 mb-4 mt-4">
                 {topLevelCategories.map(cat => (
                     <button
                         key={cat.id}
